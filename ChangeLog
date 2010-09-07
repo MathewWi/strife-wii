@@ -1,0 +1,28 @@
+This file shows a history of changes between PrBoom versions since v2.1.0.
+
+Changes from v2.1.1 to v2.<FIXME>
+     * fix problem with sound stereo
+     * fix problem with new network games
+     * supports demo files with base name >8 characters
+     * enable IDDT and other display cheats in demo playback
+     * various fixes for running on Solaris/sparc
+
+Changes from v2.1.0 to v2.1.1
+     * config file is now prboom.cfg for the non-GL version, glboom.cfg
+       for the GL version. If you have used PrBoom (or LxDoom) before, 
+       rename your old config file (boom.cfg) appropriately.
+     * fullscreen is now default for new prboom.cfg
+     * included sdl_mixer.dll now plays midi-files
+     * if waveout is used for sound (Windows NT4) the sound doesn't
+       stutter anymore
+     * redid parts of the OpenGL renderer
+       + sprites behind translucent walls are rendered correctly
+       + translucent walls are rendered correctly
+       + support for glBSP nodes
+       + compliant to glBSP spec v2
+       + use_mipmapping option in boom.cfg
+       + the default for zone memory in OpenGL is now 16MB
+     * most Boom demos should now work
+     * a lot more original Doom demos work
+     * keycard switches are shown coloured on the map, like doors
+     * non-highres rendering functions dropped

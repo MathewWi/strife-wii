@@ -1,0 +1,1 @@
+void SV_CompileScript(int scriptmap);
