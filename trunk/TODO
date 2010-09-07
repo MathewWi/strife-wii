@@ -1,0 +1,18 @@
+Entrys marked by a * are fixed.
+
+--------------------------------------------------------------------------
+1.  Rearrange the frame structure.
+
+The frame structure in info.h needs to be rearranged so that seh support can fully work. I also need to remove
+extra frames that is no longer needed.
+
+--------------------------------------------------------------------------
+2.  Auto health
+
+In Strife, health in the player's inventory is automatically used if health is lower than 40.
+
+--------------------------------------------------------------------------
+3. Demo support
+
+Prboom's demo code is so badly broken that it may take a long time to get it back up again, and getting it
+to work with Strife's features may even take longer.
