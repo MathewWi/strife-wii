@@ -52,6 +52,10 @@ extern int lprintf(OutputLevels pri, const char *fmt, ...) __attribute__((format
 extern int cons_output_mask;
 extern int cons_error_mask;
 
+int log_init(void);
+void log_close(void);
+
+
 /* killough 3/20/98: add const
  * killough 4/25/98: add gcc attributes
  * cphipps 01/11- moved from i_system.h */

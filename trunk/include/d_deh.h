@@ -1201,4 +1201,6 @@ extern const char*	s_TMPRNPC_10;
 // from g_game.c, prefix for savegame name like "boomsav"
 extern const char* savegamename;
 
+extern boolean gSd;
+
 #endif

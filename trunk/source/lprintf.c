@@ -53,9 +53,12 @@
 #include "lprintf.h"
 #include "i_main.h"
 #include "m_argv.h"
+#include "d_deh.h"
 
 int cons_error_mask = -1-LO_INFO; /* all but LO_INFO when redir'd */
 int cons_output_mask = -1;        /* all output enabled */
+
+FILE *fLog;
 
 /* cphipps - enlarged message buffer and made non-static
  * We still have to be careful here, this function can be called after exit
@@ -339,41 +342,17 @@ int lprintf(OutputLevels pri, const char *s, ...)
 #endif
   va_end(v);
  
-  //Determine SD or USB
-  FILE * fp2;
-  boolean sd = false;
-  boolean usb = false;
-  fp2 = fopen("sd:/apps/strifewii/data/prboom.wad", "rb");
-  if(fp2)
-  sd = true;
-  if(!fp2){
-  fp2 = fopen("usb:/apps/strifewii/data/prboom.wad", "rb");
-  }
-  if(fp2 && !sd)
-  usb = true;
-       
-  if(fp2);
-  fclose(fp2);
-
-  FILE * fp;
-
-  if(sd)
-  fp = fopen("sd:/apps/strifewii/data/output.txt", "a");
-  if(usb)
-  fp = fopen("usb:/apps/strifewii/data/output.txt", "a");
-
   if (lvl&cons_output_mask)               /* mask output as specified */
   {
     //r=fprintf(stdout,"%s",msg);
-          r=fprintf(fp,"%s",msg);
+          r=fprintf(fLog,"%s",msg);
 #ifdef _WIN32
     I_ConPrintString(msg);
 #endif
   }
   if (!isatty(1) && lvl&cons_error_mask)  /* if stdout redirected     */
     //r=fprintf(stderr,"%s",msg);           /* select output at console */
-          r=fprintf(fp,"%s",msg);
-  fclose(fp);
+          r=fprintf(fLog,"%s",msg);
   return r;
 }
 
@@ -409,3 +388,38 @@ void I_Error(const char *error, ...)
   sleep(10);
   I_SafeExit(-1);
 }
+
+/* MrPeanut -- I wrote this function initially because it would take FOREVER to write a data report to an sdcard.  While looking at lprintf it was hard not to notice
+   that output.txt is being opened, and reopened every time lprintf is called.  I'm creating a global, well not global (but to this file) file pointer that is the stream
+   to our log.  We'll close it only when the engine closes.  We'll open it once, instead of every time lprintf is called
+*/
+
+int log_init(void)
+{
+	if(gSd)
+		fLog = fopen("sd:/apps/strifewii/data/output_wii.txt", "w");
+	else
+		fLog = fopen("usb:/apps/strifewii/data/output_wii.txt", "w");
+
+	if(!fLog)
+	{
+		printf("log_init(): log could not be opened\n");
+		return -1;
+	}
+
+	fprintf(fLog, "\n\n==============================\n");
+	fprintf(fLog, "Strife - Nintendo Wii Port\n");
+	fprintf(fLog, "Version 1.0-alpha\n");    // change version, create #define or variable if you want
+	fprintf(fLog, "Based on svstrife 1.4\n");
+	fprintf(fLog, "==============================\n");
+	fprintf(fLog, "\nlog_init(): Log has been initialized.");
+}
+
+void log_close(void)
+{
+	fprintf(fLog, "log_close(): End of data\n");
+	fflush(fLog); fclose(fLog);
+}
+
+
+

@@ -16,7 +16,7 @@ include $(DEVKITPPC)/wii_rules
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
 
-TARGET		:=	$(notdir $(CURDIR))
+TARGET		:=	boot
 BUILD		:=	build
 SOURCES		:=  screenlib , source
 DATA		:=	
@@ -26,7 +26,7 @@ INCLUDES	:=  screenlib , include
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS	= -D_WII_ -DNOOPENGL -DSDL -D__BIG_ENDIAN__ -DHAVE_CONFIG_H -g -O3 -Wall $(MACHDEP) $(INCLUDE)
+CFLAGS	= -w -D_WII_ -DNOOPENGL -DSDL -DALL_IN_ONE -D__BIG_ENDIAN__ -DHAVE_CONFIG_H -g -O3 -Wall $(MACHDEP) $(INCLUDE)
 CXXFLAGS	=	$(CFLAGS)
 
 LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
@@ -36,7 +36,7 @@ LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 #---------------------------------------------------------------------------------
 LIBS	:=	 -lSDL_net -lSDL_ttf -lSDL_gfx -lSDL_mixer -lSDL_image -lsmpeg \
                 -lSDL -lasnd -ljpeg -lpng -lfreetype -lvorbisidec \
-                -lz -lfat -lwiiuse -lbte -logc -lm -lwiikeyboard
+                -lz -lfat -lwiiuse -lbte -logc -lm -lwiikeyboard -lsupc++
 
  
 #--------------------------------------------------------------------------------

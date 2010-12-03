@@ -73,6 +73,11 @@ rcsid[] = "$Id: i_main.c,v 1.10.2.1 2002/07/20 18:08:34 proff_fs Exp $";
 
 #include "usbgecko.h"
 
+boolean gSd = false;  // MrPeanut, global variable determining if we're running from SD or USB
+
+static void *xfb = NULL; // MrPeanut, to initialize the console, if we have a problem, to display errors.
+static GXRModeObj *rmode = NULL;
+
 int broken_pipe;
 
 /* Most of the following has been rewritten by Lee Killough
@@ -363,17 +368,55 @@ uid_t stored_euid = -1;
 #endif
 
 //int main(int argc, const char * const * argv)
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
+	// MrPeanut
+	// We need to find out where we're starting from, being usb or sd. Let's grab the path ONCE and set a variable to usb true or false
+	// This way if a function needs to know if we're loading from usb, we don't have to check everytime we need to know
 
+  FILE *fp2;
+  
   InitGecko();
   gprintf("USB Gecko Initialized!\n");
-
+  
   fatInitDefault();
   gprintf("FAT Initialized!\n");
-  
+
   WPAD_Init();
   gprintf("WPAD Initialized!\n");
+  
+  fp2 = fopen("sd:/apps/strifewii/data/svstrife.wad", "rb");
+  
+  if(fp2)
+	  gSd = true;
+
+  fclose(fp2);
+
+  if(gSd != true)
+  {
+	  fp2 = fopen("usb:/apps/strifewii/data/svstrife.wad", "rb"); // MrP -- this prevents a crash...
+	  if(!fp2)
+	  {
+		  VIDEO_Init();
+		  rmode = VIDEO_GetPreferredMode(NULL);
+		  xfb = MEM_K0_TO_K1(SYS_AllocateFramebuffer(rmode));
+		  console_init(xfb,20,20,rmode->fbWidth,rmode->xfbHeight,rmode->fbWidth*VI_DISPLAY_PIX_SZ);
+		  VIDEO_Configure(rmode);
+		  VIDEO_SetNextFramebuffer(xfb);
+		  VIDEO_SetBlack(FALSE);
+		  VIDEO_Flush();
+		  VIDEO_WaitVSync();
+	      if(rmode->viTVMode&VI_NON_INTERLACE)
+			  VIDEO_WaitVSync();
+		  
+		  printf("\n\nmain(): Cannot locate (sd/usb):/apps/strifewii/data/svstrife.wad.\n");
+		  sleep(3);
+		  
+		  return 1;
+	  }
+  }
+
+  fclose(fp2);
   
 #ifdef SECURE_UID
   /* First thing, revoke setuid status (if any) */
@@ -389,8 +432,12 @@ int main(int argc, char **argv)
   Init_ConsoleWin();
   atexit(Done_ConsoleWin);
 #endif
+  
+  log_init();
+  
   /* Version info */
   lprintf(LO_INFO,"\n");
+  
   PrintVer();
 
   myargc = argc;
@@ -414,6 +461,7 @@ int main(int argc, char **argv)
 
   Z_Init();                  /* 1/18/98 killough: start up memory stuff first */
 
+  atexit(log_close);
   atexit(I_Quit);
 #ifndef _DEBUG
   signal(SIGSEGV, I_SignalHandler);

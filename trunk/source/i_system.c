@@ -59,6 +59,7 @@ rcsid[] = "$Id: i_system.c,v 1.6.2.3 2002/07/21 10:20:47 cph Exp $";
 #include "lprintf.h"
 #include "doomtype.h"
 #include "doomdef.h"
+#include "d_deh.h"
 
 #ifdef __GNUG__
 #pragma implementation "i_system.h"
@@ -159,11 +160,11 @@ char *I_DoomExeDir(void)
   FILE * fp2;
   boolean sd = false;
   boolean usb = false;
-  fp2 = fopen("sd:/apps/strifewii/data/prboom.wad", "rb");
+  fp2 = fopen("sd:/apps/strifewii/data/svstrife.wad", "rb");
   if(fp2)
   sd = true;
   if(!fp2){
-  fp2 = fopen("usb:/apps/strifewii/data/prboom.wad", "rb");
+  fp2 = fopen("usb:/apps/strifewii/data/svstrife.wad", "rb");
   }
   if(fp2 && !sd)
   usb = true;
@@ -215,40 +216,23 @@ static boolean HasTrailingSlash(const char* dn)
 
 char* I_FindFile(const char* wfname, const char* ext)
 {
-  //size_t  pl = strlen(wfname) + strlen(ext) + 4;
-  
-        //Determine SD or USB
-    FILE * fp2;
-    boolean sd = false;
-    boolean usb = false;
-    fp2 = fopen("sd:/apps/strifewii/data/prboom.wad", "rb");
-    if(fp2)
-    sd = true;
-    if(!fp2){
-    fp2 = fopen("usb:/apps/strifewii/data/prboom.wad", "rb");
-    }
-    if(fp2 && !sd)
-    usb = true;
+	FILE *fin;
+	char *p;
+    if(gSd)
+		p = "sd:/apps/strifewii/data/";
+	else
+		p = "usb:/apps/strifewii/data/";
         
-        if(fp2)
-        fclose(fp2);
-
-        char *p;
-        if(sd)
-        p = "sd:/apps/strifewii/data/";
-        if(usb)
-        p = "usb:/apps/strifewii/data/";
-        
-        char *f;
-        f = malloc(strlen(p) + strlen(wfname) + 4);
-        sprintf(f, "%s%s", p, wfname);
-        if (fopen(f, "r"))
-        {
-                return f;
-        }
-        else
-        {
-                return NULL;
-        }
+    char *f;
+    f = malloc(strlen(p) + strlen(wfname) + 4);
+    sprintf(f, "%s%s", p, wfname);
+    fin = fopen(f, "r");
+	if(fin)
+	{
+		fclose(fin);
+		return f;
+	}
+	
+	return NULL;
 }
 #endif
