@@ -38,6 +38,8 @@
 #pragma interface
 #endif
 
+#include <stdio.h>
+
 //
 // TYPES
 //
@@ -103,7 +105,7 @@ typedef struct
     ns_colormaps
   } namespace;
 
-  int handle;
+  FILE *handle;
   int position;
   unsigned int locks; // CPhipps - wad lump locking
   wad_source_t source;

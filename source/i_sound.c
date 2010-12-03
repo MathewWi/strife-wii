@@ -199,7 +199,9 @@ static void updateSoundParams(int handle, int volume, int seperation, int pitch)
     if (pitched_sounds)
     channelinfo[slot].step = step + (((channelinfo[slot].samplerate<<16)/snd_samplerate)-65536);
     else
-    channelinfo[slot].step = ((channelinfo[slot].samplerate<<16)/snd_samplerate);
+   // channelinfo[slot].step = ((channelinfo[slot].samplerate<<16)/snd_samplerate);
+
+   channelinfo[slot].step = snd_samplerate; //((channelinfo[slot].samplerate<<16)/snd_samplerate); // Hack to fix chipmunk audio
 
     // Separation, that is, orientation/stereo.
     //  range is: 1 - 256
@@ -566,7 +568,7 @@ I_InitSound()
 //
 
 #ifdef HAVE_MIXER
-#include "SDL_mixer.h"
+#include "SDL/SDL_mixer.h"
 #include "mmus2mid.h"
 
 static Mix_Music *music[2] = { NULL, NULL };

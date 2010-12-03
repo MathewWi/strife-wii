@@ -94,14 +94,21 @@ void W_PrintLump(FILE* fp, void* p) {
 
 
 
-static int W_Filelength(int handle)
+static int W_Filelength(FILE *handle)
 {
-  struct stat   fileinfo;
-  if (fstat(handle,&fileinfo) == -1)
-    I_Error("W_Filelength: Error fstating");
-  return fileinfo.st_size;
-}
+	int filecur, filelen;
 
+	filecur = ftell(handle);
+	
+	if(filecur == -1)
+		return -1;
+
+	fseek(handle, 0, SEEK_END);
+    filelen = ftell(handle);
+	fseek(handle, filecur, SEEK_SET);
+	
+	return filelen;
+}
 
 
 void ExtractFileBase (const char *path, char *dest)
@@ -166,22 +173,22 @@ static void W_AddFile(const char *filename, wad_source_t source)
   wadinfo_t   header;
   lumpinfo_t* lump_p;
   unsigned    i;
-  int         handle;
+  FILE        *handle;
   int         length;
   int         startlump;
   filelump_t  *fileinfo, *fileinfo2free=NULL; //killough
   filelump_t  singleinfo;
-
+  
   // open the file and add to directory
 
-  handle = open(filename,O_RDONLY | O_BINARY);
+  handle = fopen(filename, "rb");
 
 #ifdef HAVE_NET
   if (handle == -1 && D_NetGetWad(filename)) // CPhipps
     handle = open(filename,O_RDONLY | O_BINARY);
 #endif
 
-  if (handle == -1)
+  if (!handle)
     {
       if (  strlen(filename)<=4 ||      // add error check -- killough
            (strcasecmp(filename+strlen(filename)-4 , ".lmp" ) &&
@@ -205,46 +212,47 @@ static void W_AddFile(const char *filename, wad_source_t source)
       // single lump file
       fileinfo = &singleinfo;
       singleinfo.filepos = 0;
-      singleinfo.size = LONG(W_Filelength(handle));
+      singleinfo.size = W_Filelength(handle);
       ExtractFileBase(filename, singleinfo.name);
       numlumps++;
     }
   else
     {
       // WAD file
-      read(handle, &header, sizeof(header));
+      fread(&header, 1, sizeof(header), handle);
       if (strncmp(header.identification,"IWAD",4) &&
           strncmp(header.identification,"PWAD",4))
         I_Error("W_AddFile: Wad file %s doesn't have IWAD or PWAD id", filename);
-      header.numlumps = LONG(header.numlumps);
-      header.infotableofs = LONG(header.infotableofs);
-      length = header.numlumps*sizeof(filelump_t);
-      fileinfo2free = fileinfo = malloc(length);    // killough
-      lseek(handle, header.infotableofs, SEEK_SET);
-      read(handle, fileinfo, length);
+	  header.numlumps = LONG(header.numlumps);
+	  header.infotableofs = LONG(header.infotableofs);
+	  length = header.numlumps*sizeof(filelump_t);
+	  fileinfo2free = fileinfo = malloc(length);    // killough
+	  fseek(handle, header.infotableofs, SEEK_SET);
+      fread(fileinfo, 1, length, handle);
       numlumps += header.numlumps;
     }
-
-    // Fill in lumpinfo
+  
+	// Fill in lumpinfo
     lumpinfo = realloc(lumpinfo, numlumps*sizeof(lumpinfo_t));
-
-    lump_p = &lumpinfo[startlump];
+	
+	lump_p = &lumpinfo[startlump];
 
     for (i=startlump ; (int)i<numlumps ; i++,lump_p++, fileinfo++)
-      {
-        lump_p->handle = handle;                    //  killough 4/25/98
+	{
+		lump_p->handle = handle;                    //  killough 4/25/98
         lump_p->position = LONG(fileinfo->filepos);
-        lump_p->size = LONG(fileinfo->size);
+		lump_p->size = LONG(fileinfo->size);
+		
 #ifndef NO_PREDEFINED_LUMPS
         lump_p->data = NULL;                        // killough 1/31/98
 #endif
         lump_p->namespace = ns_global;              // killough 4/17/98
         strncpy (lump_p->name, fileinfo->name, 8);
-  lump_p->source = source;                    // Ty 08/29/98
-  lump_p->locks = 0;                   // CPhipps - initialise locks
-      }
-
-    free(fileinfo2free);      // killough
+		lump_p->source = source;                    // Ty 08/29/98
+		lump_p->locks = 0;                   // CPhipps - initialise locks
+	}
+	
+	free(fileinfo2free);      // killough
 }
 
 // jff 1/23/98 Create routines to reorder the master directory
@@ -543,8 +551,8 @@ void W_ReadLump(int lump, void *dest)
 
       // killough 1/31/98: Reload hack (-wart) removed
 
-      lseek(l->handle, l->position, SEEK_SET);
-      c = read(l->handle, dest, l->size);
+      fseek(l->handle, l->position, SEEK_SET);
+      c = fread(dest, 1, l->size, l->handle );
       if (c < l->size)
         I_Error("W_ReadLump: only read %i of %i on lump %i", c, l->size, lump);
     }
