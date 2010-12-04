@@ -128,6 +128,11 @@ boolean nomusicparm;
 //jff 4/18/98
 extern boolean inhelpscreens;
 
+// Wii ir variables
+static int   joyirx;
+static int   joyiry;
+int ir_crosshair;
+
 skill_t startskill;
 int     startepisode;
 int     startmap;
@@ -177,8 +182,18 @@ void D_PostEvent(event_t *ev)
   /* cph - suppress all input events at game start
    * FIXME: This is a lousy kludge */
   if (gametic < 3) return;
-  events[eventhead++] = *ev;
-  eventhead &= MAXEVENTS-1;
+  M_Responder(ev) ||
+	  (gamestate == GS_LEVEL && (
+				     HU_Responder(ev) ||
+				     ST_Responder(ev) ||
+				     AM_Responder(ev)
+				     )
+	  ) ||
+	G_Responder(ev);
+
+// Set wii ir variables
+  joyirx = ev->data4 + 160;
+  joyiry = ev->data5 + 110;
 }
 
 //
@@ -1951,6 +1966,9 @@ void D_DoomMainSetup(void)
 
 void D_DoomMain(void)
 {
+  WPAD_SetDataFormat(0, WPAD_FMT_BTNS_ACC_IR);
+  WPAD_SetVRes(WPAD_CHAN_ALL, SCREENWIDTH, SCREENHEIGHT);
+ 
   D_DoomMainSetup(); // CPhipps - setup out of main execution stack
 
   D_DoomLoop ();  // never returns
